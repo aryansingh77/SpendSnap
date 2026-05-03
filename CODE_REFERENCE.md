@@ -937,6 +937,35 @@ BlocBuilder<TransactionBloc, TransactionState>(
 
 ---
 
+### **Q: How do you show unread notification counts without a database?**
+**A: Dynamic keys intersected against a local static Set.**
+```dart
+class _NotificationBellState extends State<_NotificationBell> {
+  // Persists in memory while app is open, no database reads needed
+  static final Set<String> _seenAlerts = {};
+
+  @override
+  Widget build(BuildContext context) {
+    // Determine active alerts dynamically based on limit/goal breaches
+    final currentAlertKeys = _computeActiveAlertKeys(...);
+    
+    // Check how many current alerts are not in our 'seen' collection
+    final unreadCount = currentAlertKeys.where((k) => !_seenAlerts.contains(k)).length;
+    
+    return IconButton(
+      icon: unreadCount > 0 ? const Badge(child: Icon(Icons.notifications)) : const Icon(Icons.notifications),
+      onTap: () {
+        // Mark all current valid key states as read instantly
+        setState(() => _seenAlerts.addAll(currentAlertKeys));
+        _showBottomSheet(...);
+      }
+    );
+  }
+}
+```
+
+---
+
 ## 🎯 **Final Takeaway**
 
 Your project demonstrates:

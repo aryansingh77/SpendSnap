@@ -11,6 +11,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../data/models/transaction_model.dart';
 import '../../../logic/blocs/auth/auth_bloc.dart';
 import '../../../logic/blocs/budget/budget_bloc.dart';
+import '../../../logic/blocs/goal/goal_bloc.dart';
 import '../../../logic/blocs/transaction/transaction_bloc.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -148,40 +149,237 @@ class _DashboardHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        _NotificationBell(),
+        const _NotificationBell(),
       ],
     );
   }
 }
 
-class _NotificationBell extends StatelessWidget {
+class _NotificationBell extends StatefulWidget {
+  const _NotificationBell();
+
+  @override
+  State<_NotificationBell> createState() => _NotificationBellState();
+}
+
+class _NotificationBellState extends State<_NotificationBell> {
+  static final Set<String> _seenAlerts = {};
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<BudgetBloc, BudgetState>(
-      builder: (context, state) {
-        final hasAlert = state.overBudgetCount > 0;
-        return Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: AppColors.surfaceElevated,
-            borderRadius: BorderRadius.circular(13),
-            border: Border.all(color: AppColors.cardBorder),
-          ),
-          child: Stack(
+      builder: (context, budgetState) {
+        return BlocBuilder<GoalBloc, GoalState>(
+          builder: (context, goalState) {
+            final currentAlertKeys = <String>[];
+            
+            for (final b in budgetState.budgets) {
+              if (b.isOverBudget) {
+                currentAlertKeys.add('budget_over_${b.category}_${b.month}_${b.year}');
+              } else if (b.isNearLimit) {
+                currentAlertKeys.add('budget_near_${b.category}_${b.month}_${b.year}');
+              }
+            }
+            
+            for (final g in goalState.goals) {
+              if (g.isCompleted) {
+                currentAlertKeys.add('goal_done_${g.id}');
+              } else if (g.progressPercent >= 0.8) {
+                currentAlertKeys.add('goal_near_${g.id}');
+              }
+            }
+
+            final unreadCount = currentAlertKeys.where((k) => !_seenAlerts.contains(k)).length;
+            final isUnread = unreadCount > 0;
+
+            return Tooltip(
+              message: 'Alerts & Notifications',
+              textStyle: const TextStyle(fontSize: 12, color: Colors.white),
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              preferBelow: false,
+              verticalOffset: 24,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _seenAlerts.addAll(currentAlertKeys);
+                  });
+                  _showNotificationSheet(context, budgetState, goalState);
+                },
+                child: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceElevated,
+                    borderRadius: BorderRadius.circular(13),
+                    border: Border.all(color: AppColors.cardBorder),
+                  ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      const Center(child: Icon(Icons.notifications_outlined, size: 20)),
+                      if (isUnread)
+                        Positioned(
+                          top: -2,
+                          right: -2,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.warning,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppColors.surfaceElevated, width: 2),
+                            ),
+                            child: Text(
+                              '$unreadCount',
+                              style: const TextStyle(
+                                color: AppColors.background,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showNotificationSheet(BuildContext context, BudgetState budgetState, GoalState goalState) {
+    final alerts = <_NotificationItem>[];
+
+    for (final b in budgetState.budgets) {
+      if (b.isOverBudget) {
+        alerts.add(_NotificationItem(
+          title: '${b.category} Budget Exceeded',
+          message: 'You have spent ${CurrencyFormatter.format(b.spentAmount)} (Limit: ${CurrencyFormatter.compact(b.limitAmount)})',
+          icon: Icons.warning_amber_rounded,
+          color: AppColors.expense,
+          route: '/budgets',
+        ));
+      } else if (b.isNearLimit) {
+        alerts.add(_NotificationItem(
+          title: '${b.category} Nearing Limit',
+          message: 'You have used ${(b.usagePercent * 100).round()}% of your budget.',
+          icon: Icons.trending_up_rounded,
+          color: AppColors.warning,
+          route: '/budgets',
+        ));
+      }
+    }
+
+    for (final g in goalState.goals) {
+      if (g.isCompleted) {
+        alerts.add(_NotificationItem(
+          title: 'Goal Achieved: ${g.title}',
+          message: 'You have fully funded this goal!',
+          icon: Icons.star_rounded,
+          color: AppColors.primary,
+          route: '/goals',
+        ));
+      } else if (g.progressPercent >= 0.8) {
+        alerts.add(_NotificationItem(
+          title: 'Goal Close: ${g.title}',
+          message: 'You are ${(g.progressPercent * 100).round()}% there! Only ${CurrencyFormatter.format(g.remainingAmount)} left.',
+          icon: Icons.flag_rounded,
+          color: AppColors.secondary,
+          route: '/goals',
+        ));
+      }
+    }
+
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Center(child: Icon(Icons.notifications_outlined, size: 20)),
-              if (hasAlert)
-                Positioned(
-                  top: 9,
-                  right: 9,
-                  child: Container(
-                    width: 7,
-                    height: 7,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.expense,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Alerts & Notifications', style: AppTypography.textTheme.titleLarge),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${alerts.length}',
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
+                  ],
+                ),
+              ),
+              const Divider(color: AppColors.cardBorder, height: 1),
+              if (alerts.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Center(
+                    child: Text(
+                      'You\'re all caught up!\nNo active alerts right now.',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: alerts.length,
+                    separatorBuilder: (_, __) => const Divider(color: AppColors.surfaceElevated, height: 1),
+                    itemBuilder: (context, index) {
+                      final alert = alerts[index];
+                      return ListTile(
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.go(alert.route);
+                        },
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: alert.color.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(alert.icon, color: alert.color, size: 20),
+                        ),
+                        title: Text(alert.title, style: AppTypography.textTheme.titleMedium),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Text(
+                            alert.message, 
+                            style: AppTypography.textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+                          ),
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 20),
+                      );
+                    },
                   ),
                 ),
             ],
@@ -190,6 +388,22 @@ class _NotificationBell extends StatelessWidget {
       },
     );
   }
+}
+
+class _NotificationItem {
+  final String title;
+  final String message;
+  final IconData icon;
+  final Color color;
+  final String route;
+
+  _NotificationItem({
+    required this.title,
+    required this.message,
+    required this.icon,
+    required this.color,
+    required this.route,
+  });
 }
 
 // ── Balance Card ──────────────────────────────────────────────────────────────
@@ -631,6 +845,18 @@ class _TransactionTile extends StatelessWidget {
                   style: AppTypography.textTheme.bodySmall
                       ?.copyWith(color: AppColors.textSecondary),
                 ),
+                if (transaction.note.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    transaction.note,
+                    style: AppTypography.textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ],
             ),
           ),

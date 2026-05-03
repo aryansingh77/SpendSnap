@@ -272,13 +272,48 @@ Call: BudgetRecommendationService.suggest(
           ├─ Food: {suggested: 7000, flag: false, reason: ...}
           ├─ Transport: {suggested: 8500, flag: true, reason: "..."}
           └─ ...
+                      │
+                      ▼
+        Show as cards on AddBudgetScreen:
+        ┌─ Food & Dining          ┐
+        │ Suggested: ₹7,000/month  │ [SET]
+        │ Your recent avg: ₹5,000  │
+        └────────────────────────┘
+```
+
+---
+
+## 🔔 **Smart Notification Flow (Unread Tracking)**
+
+```
+User looks at DashboardScreen
+       │
+       ▼
+_NotificationBell (StatefulWidget)
+       │
+       ├─ Listens to BudgetBloc & GoalBloc streams
+       │
+       ├─ Generate Current Alert Keys:
+       │    1. Budgets over 100% → 'budget_over_Food_${month}_${year}'
+       │    2. Goals at 100% → 'goal_done_${goalId}'
+       │
+       ├─ Check against Local Static State:
+       │    static final Set<String> _seenAlerts;
+       │
+       ├─ Calculate unread count:
+       │    currentAlertKeys.where((k) => !_seenAlerts.contains(k)).length
+       │
+       └─ Render UI:
+          ├─ If unread > 0 → Show yellow badge with dynamic number
+          └─ If unread == 0 → Standard bell icon
                      │
-                     ▼
-       Show as cards on AddBudgetScreen:
-       ┌─ Food & Dining          ┐
-       │ Suggested: ₹7,000/month  │ [SET]
-       │ Your recent avg: ₹5,000  │
-       └────────────────────────┘
+                     ▼ (User taps bell)
+                     │
+                     ├─ setState(() { _seenAlerts.addAll(currentAlertKeys); })
+                     │    → Instantly marks items as read (badge disappears)
+                     │
+                     └─ showModalBottomSheet(...)
+                          → Displays active alert messages
 ```
 
 ---

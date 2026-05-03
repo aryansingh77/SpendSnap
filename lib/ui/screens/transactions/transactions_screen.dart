@@ -349,6 +349,18 @@ class _TxnTile extends StatelessWidget {
                       ],
                     ],
                   ),
+                  if (txn.note.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      txn.note,
+                      style: AppTypography.textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ],
               ),
             ),

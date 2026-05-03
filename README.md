@@ -18,6 +18,8 @@ A Flutter application for smart personal finance tracking with rule-based spendi
 ### Extended (beyond base requirements)
 | Feature | Description |
 |---|---|
+| Smart Notification Center | Alert system with dynamic unread badging (stateful tracking) for budget limits & goal achievements |
+| Transaction Notes | Log and elegantly display custom notes on each transaction |
 | Recurring Transactions | Mark transactions as Daily / Weekly / Monthly |
 | Spending Health Score | Rule-based 0–100 score across 4 dimensions |
 | Smart Budget Recommendations | 50/30/20 engine adapted to user's historical data |

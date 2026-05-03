@@ -126,6 +126,7 @@ TransactionModel {
 ✅ Client-side filtering by category + type (using Sentinel/unset pattern)  
 ✅ Search by title (on-device)  
 ✅ Swipe-to-delete with confirm dialog  
+✅ Custom notes displayed dynamically (collection-if syntax)
 ✅ **Bank Sync Simulator**: Fetches real JSON from HTTP API and auto-categorizes expenses
 
 ---
@@ -295,6 +296,27 @@ Suggested: (18,000 × 0.6) + (12,000 × 0.4) = ₹15,200 → ₹15,000
 - Provides actual HTTP network handling (dart:convert, http package) bypassing hardcoded data.
 - Handles UI loading dialogs safely against deeply nested shell navigators (`rootNavigator: true`).
 - Incorporates error handling for internet drops ("Failed to sync bank data").
+
+---
+
+### **System 4: Smart Notification Engine (Stateful Unread Tracking)** 🔔
+**File:** `ui/screens/dashboard/dashboard_screen.dart` (`_NotificationBell`)
+
+**Purpose:** Provide intelligent unread badging without unnecessary Firestore writes. It only shows the unread counter for *new* limit breaches or goal completions.
+
+**Algorithm:**
+```
+1. Derive current alert keys dynamically from active Bloc states:
+   - "budget_over_${category}_${month}_${year}"
+   - "goal_done_${goalId}"
+2. Compare active keys against `static final Set<String> _seenAlerts`.
+3. If actve keys exist that are not in `seenAlerts`, display the yellow badge with the calculated unread count.
+4. On tap, add all current keys to `_seenAlerts` via `setState`, dismissing the unread badge automatically while popping open a dynamic bottom modal sheet.
+```
+
+**Why Not Copy-Paste?**
+- Completely local state tracking reduces expensive database document updates (no "isRead" boolean on Firebase).
+- Key combination strategy ensures the notification safely re-triggers the next month when limits reset.
 
 ---
 
