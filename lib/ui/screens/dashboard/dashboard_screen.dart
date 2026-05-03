@@ -47,8 +47,6 @@ class DashboardScreen extends StatelessWidget {
                 delegate: SliverChildListDelegate([
                   _BalanceCard().animate().fadeIn().slideY(begin: 0.08),
                   const SizedBox(height: 20),
-                  _QuickActions().animate().fadeIn(delay: 80.ms).slideY(begin: 0.08),
-                  const SizedBox(height: 20),
                   _BudgetOverviewStrip().animate().fadeIn(delay: 120.ms).slideY(begin: 0.08),
                   const SizedBox(height: 20),
                   _TopSpendCard().animate().fadeIn(delay: 160.ms).slideY(begin: 0.08),
@@ -126,6 +124,30 @@ class _DashboardHeader extends StatelessWidget {
           ],
         ),
         const Spacer(),
+        Tooltip(
+          message: 'Add a new transaction',
+          textStyle: const TextStyle(fontSize: 12, color: Colors.white),
+          decoration: BoxDecoration(
+            color: AppColors.secondary.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          preferBelow: false,
+          verticalOffset: 24,
+          child: GestureDetector(
+            onTap: () => context.push('/add-transaction'),
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(13),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+              ),
+              child: const Icon(Icons.add_rounded, color: AppColors.primary, size: 24),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
         _NotificationBell(),
       ],
     );
@@ -347,85 +369,6 @@ class _BalanceStat extends StatelessWidget {
   }
 }
 
-// ── Quick Actions ─────────────────────────────────────────────────────────────
-
-class _QuickActions extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _ActionButton(
-          icon: Icons.add_rounded,
-          label: 'Add',
-          color: AppColors.primary,
-          onTap: () => context.push('/add-transaction'),
-        ),
-        _ActionButton(
-          icon: Icons.receipt_long_rounded,
-          label: 'History',
-          color: AppColors.secondary,
-          onTap: () => context.go('/transactions'),
-        ),
-        _ActionButton(
-          icon: Icons.account_balance_wallet_rounded,
-          label: 'Budget',
-          color: AppColors.catBills,
-          onTap: () => context.go('/budgets'),
-        ),
-        _ActionButton(
-          icon: Icons.flag_rounded,
-          label: 'Goals',
-          color: AppColors.warning,
-          onTap: () => context.go('/goals'),
-        ),
-      ],
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 62,
-            height: 62,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: color.withValues(alpha: 0.25)),
-            ),
-            child: Icon(icon, color: color, size: 26),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // ── Budget Overview Strip ─────────────────────────────────────────────────────
 

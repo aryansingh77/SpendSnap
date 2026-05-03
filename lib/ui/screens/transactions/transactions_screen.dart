@@ -12,7 +12,9 @@ import '../../../core/widgets/category_badge.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/snap_card.dart';
 import '../../../data/models/transaction_model.dart';
+import '../../../logic/blocs/auth/auth_bloc.dart';
 import '../../../logic/blocs/transaction/transaction_bloc.dart';
+import '../../../logic/services/bank_sync_service.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -39,6 +41,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       appBar: AppBar(
         title: const Text('Transactions'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.account_balance_rounded),
+            tooltip: 'Sync Bank Data',
+            onPressed: _syncBankTransactions,
+          ),
           IconButton(
             icon: const Icon(Icons.tune_rounded),
             onPressed: _showFilterSheet,
@@ -159,10 +166,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     );
   }
 
-  void _showFilterSheet() {
-    showModalBottomSheet(
+  Future<void> _showFilterSheet() async {
+    final result = await showModalBottomSheet<_FilterResult>(
       context: context,
       useRootNavigator: true,
+      isScrollControlled: true,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -170,18 +178,65 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       builder: (_) => _FilterSheet(
         selectedCategory: _selectedCategory,
         selectedType: _selectedType,
-        onApply: (cat, type) {
-          setState(() {
-            _selectedCategory = cat;
-            _selectedType = type;
-          });
-          context.read<TransactionBloc>().add(
-                TransactionFilterChanged(category: cat, type: type),
-              );
-          Navigator.pop(context);
-        },
       ),
     );
+
+    if (!mounted || result == null) return;
+
+    setState(() {
+      _selectedCategory = result.category;
+      _selectedType = result.type;
+    });
+
+    context.read<TransactionBloc>().add(
+          TransactionFilterChanged(
+            category: result.category,
+            type: result.type,
+          ),
+        );
+  }
+
+  Future<void> _syncBankTransactions() async {
+    final state = context.read<AuthBloc>().state;
+    if (state is! AuthAuthenticated) return;
+    final userId = state.profile.uid;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      ),
+    );
+
+    try {
+      final txns = await BankSyncService.fetchRecentBankTransactions(userId);
+      if (!mounted) return;
+
+      final bloc = context.read<TransactionBloc>();
+      for (final txn in txns) {
+        bloc.add(TransactionAdded(transaction: txn));
+      }
+
+      Navigator.of(context, rootNavigator: true).pop(); // Close dialog using root navigator
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Successfully synced ${txns.length} bank transactions!'),
+          backgroundColor: AppColors.income,
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to sync bank data.'),
+            backgroundColor: AppColors.expense,
+          ),
+        );
+      }
+    }
   }
 
   void _clearFilter() {
@@ -358,11 +413,9 @@ class _FilterSheet extends StatefulWidget {
   const _FilterSheet({
     required this.selectedCategory,
     required this.selectedType,
-    required this.onApply,
   });
   final String? selectedCategory;
   final TransactionType? selectedType;
-  final void Function(String?, TransactionType?) onApply;
 
   @override
   State<_FilterSheet> createState() => _FilterSheetState();
@@ -381,69 +434,81 @@ class _FilterSheetState extends State<_FilterSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Filter Transactions',
-              style: AppTypography.textTheme.headlineSmall),
-          const SizedBox(height: 20),
-          Text('Type', style: AppTypography.textTheme.titleMedium),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _TypeChip(
-                label: 'All',
-                selected: _type == null,
-                onTap: () => setState(() => _type = null),
-              ),
-              const SizedBox(width: 8),
-              _TypeChip(
-                label: 'Income',
-                selected: _type == TransactionType.income,
-                onTap: () => setState(() => _type = TransactionType.income),
-              ),
-              const SizedBox(width: 8),
-              _TypeChip(
-                label: 'Expense',
-                selected: _type == TransactionType.expense,
-                onTap: () => setState(() => _type = TransactionType.expense),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Text('Category', style: AppTypography.textTheme.titleMedium),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _TypeChip(
-                label: 'All',
-                selected: _cat == null,
-                onTap: () => setState(() => _cat = null),
-              ),
-              ...AppConstants.allCategories.map((c) => _TypeChip(
-                    label: c,
-                    selected: _cat == c,
-                    onTap: () => setState(() => _cat = c),
-                  )),
-            ],
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => widget.onApply(_cat, _type),
-              child: const Text('Apply Filters'),
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    return SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Filter Transactions',
+                style: AppTypography.textTheme.headlineSmall),
+            const SizedBox(height: 20),
+            Text('Type', style: AppTypography.textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _TypeChip(
+                  label: 'All',
+                  selected: _type == null,
+                  onTap: () => setState(() => _type = null),
+                ),
+                _TypeChip(
+                  label: 'Income',
+                  selected: _type == TransactionType.income,
+                  onTap: () => setState(() => _type = TransactionType.income),
+                ),
+                _TypeChip(
+                  label: 'Expense',
+                  selected: _type == TransactionType.expense,
+                  onTap: () => setState(() => _type = TransactionType.expense),
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+            Text('Category', style: AppTypography.textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _TypeChip(
+                  label: 'All',
+                  selected: _cat == null,
+                  onTap: () => setState(() => _cat = null),
+                ),
+                ...AppConstants.allCategories.map((c) => _TypeChip(
+                      label: c,
+                      selected: _cat == c,
+                      onTap: () => setState(() => _cat = c),
+                    )),
+              ],
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(
+                  _FilterResult(category: _cat, type: _type),
+                ),
+                child: const Text('Apply Filters'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+
+class _FilterResult {
+  const _FilterResult({required this.category, required this.type});
+  final String? category;
+  final TransactionType? type;
 }
 
 class _TypeChip extends StatelessWidget {

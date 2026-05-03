@@ -1,6 +1,8 @@
 part of 'transaction_bloc.dart';
 
 class TransactionState extends Equatable {
+  static const Object _unset = Object();
+
   const TransactionState({
     this.status = TransactionStatus.initial,
     this.allTransactions = const [],
@@ -39,16 +41,24 @@ class TransactionState extends Equatable {
   TransactionState copyWith({
     TransactionStatus? status,
     List<TransactionModel>? allTransactions,
-    String? filterCategory,
-    TransactionType? filterType,
+    Object? filterCategory = _unset,
+    Object? filterType = _unset,
     String? errorMessage,
     bool clearFilter = false,
   }) =>
       TransactionState(
         status: status ?? this.status,
         allTransactions: allTransactions ?? this.allTransactions,
-        filterCategory: clearFilter ? null : (filterCategory ?? this.filterCategory),
-        filterType: clearFilter ? null : (filterType ?? this.filterType),
+        filterCategory: clearFilter
+            ? null
+            : identical(filterCategory, _unset)
+                ? this.filterCategory
+                : filterCategory as String?,
+        filterType: clearFilter
+            ? null
+            : identical(filterType, _unset)
+                ? this.filterType
+                : filterType as TransactionType?,
         errorMessage: errorMessage ?? this.errorMessage,
       );
 
