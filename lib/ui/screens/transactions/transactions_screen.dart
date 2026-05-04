@@ -268,25 +268,25 @@ class _TxnTile extends StatelessWidget {
         ),
         child: const Icon(Icons.delete_rounded, color: AppColors.expense),
       ),
-      confirmDismiss: (_) async {
-        return await showDialog<bool>(
-          context: context,
-          builder: (_) => AlertDialog(
-            backgroundColor: AppColors.surface,
-            title: const Text('Delete Transaction'),
-            content: const Text('This action cannot be undone.'),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancel')),
-              TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text('Delete',
-                      style: TextStyle(color: AppColors.expense))),
-            ],
-          ),
-        );
-      },
+        confirmDismiss: (_) async {
+          return await showDialog<bool>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              backgroundColor: AppColors.surface,
+              title: const Text('Delete Transaction'),
+              content: const Text('This action cannot be undone.'),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    child: const Text('Cancel')),
+                TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    child: const Text('Delete',
+                        style: TextStyle(color: AppColors.expense))),
+              ],
+            ),
+          );
+        },
       onDismissed: (_) {
         context.read<TransactionBloc>().add(TransactionDeleted(
               userId: txn.userId,
