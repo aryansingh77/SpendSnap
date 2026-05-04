@@ -14,6 +14,7 @@ class GoalBloc extends Bloc<GoalEvent, GoalState> {
     on<GoalStreamStarted>(_onStarted);
     on<_GoalStreamUpdated>(_onUpdated);
     on<GoalAdded>(_onAdded);
+    on<GoalUpdated>(_onGoalUpdated);
     on<GoalDeleted>(_onDeleted);
     on<GoalFundsAdded>(_onFundsAdded);
   }
@@ -42,6 +43,14 @@ class GoalBloc extends Bloc<GoalEvent, GoalState> {
   Future<void> _onAdded(GoalAdded event, Emitter<GoalState> emit) async {
     try {
       await _repo.addGoal(event.goal);
+    } catch (e) {
+      emit(state.copyWith(errorMessage: e.toString()));
+    }
+  }
+
+  Future<void> _onGoalUpdated(GoalUpdated event, Emitter<GoalState> emit) async {
+    try {
+      await _repo.updateGoal(event.goal);
     } catch (e) {
       emit(state.copyWith(errorMessage: e.toString()));
     }

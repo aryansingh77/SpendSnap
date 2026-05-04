@@ -13,7 +13,9 @@ import '../../../logic/blocs/auth/auth_bloc.dart';
 import '../../../logic/blocs/goal/goal_bloc.dart';
 
 class AddGoalScreen extends StatefulWidget {
-  const AddGoalScreen({super.key});
+  final GoalModel? existingGoal;
+
+  const AddGoalScreen({super.key, this.existingGoal});
   @override
   State<AddGoalScreen> createState() => _AddGoalScreenState();
 }
@@ -26,6 +28,8 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
   DateTime _deadline = DateTime.now().add(const Duration(days: 90));
   Color _selectedColor = AppColors.secondary;
 
+  bool get _isEditing => widget.existingGoal != null;
+
   static const _palette = [
     AppColors.secondary,
     AppColors.primary,
@@ -36,6 +40,18 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
     Color(0xFF80B918),
     Color(0xFFFF6F00),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEditing) {
+      _titleCtrl.text = widget.existingGoal!.title;
+      _amountCtrl.text = widget.existingGoal!.targetAmount.toString();
+      _noteCtrl.text = widget.existingGoal!.note;
+      _deadline = widget.existingGoal!.deadline;
+      _selectedColor = Color(int.parse(widget.existingGoal!.colorHex));
+    }
+  }
 
   @override
   void dispose() {
@@ -66,24 +82,36 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
     if (!_formKey.currentState!.validate()) return;
     final uid =
         (context.read<AuthBloc>().state as AuthAuthenticated).profile.uid;
-    final goal = GoalModel(
-      id: const Uuid().v4(),
-      userId: uid,
-      title: _titleCtrl.text.trim(),
-      targetAmount: double.parse(_amountCtrl.text.trim()),
-      currentAmount: 0,
-      deadline: _deadline,
-      colorHex: _selectedColor.toARGB32().toString(),
-      note: _noteCtrl.text.trim(),
-    );
-    context.read<GoalBloc>().add(GoalAdded(goal: goal));
+
+    if (_isEditing) {
+      final updatedGoal = widget.existingGoal!.copyWith(
+        title: _titleCtrl.text.trim(),
+        targetAmount: double.parse(_amountCtrl.text.trim()),
+        deadline: _deadline,
+        colorHex: _selectedColor.toARGB32().toString(),
+        note: _noteCtrl.text.trim(),
+      );
+      context.read<GoalBloc>().add(GoalUpdated(goal: updatedGoal));
+    } else {
+      final goal = GoalModel(
+        id: const Uuid().v4(),
+        userId: uid,
+        title: _titleCtrl.text.trim(),
+        targetAmount: double.parse(_amountCtrl.text.trim()),
+        currentAmount: 0,
+        deadline: _deadline,
+        colorHex: _selectedColor.toARGB32().toString(),
+        note: _noteCtrl.text.trim(),
+      );
+      context.read<GoalBloc>().add(GoalAdded(goal: goal));
+    }
     context.pop();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('New Goal')),
+      appBar: AppBar(title: Text(_isEditing ? 'Edit Goal' : 'New Goal')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -162,7 +190,7 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
               SizedBox(
                 width: double.infinity,
                 child: GlowButton(
-                  label: 'Create Goal',
+                  label: _isEditing ? 'Save Changes' : 'Create Goal',
                   onPressed: _submit,
                   icon: Icons.check_rounded,
                   color: _selectedColor,

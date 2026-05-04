@@ -15,6 +15,7 @@ class BudgetBloc extends Bloc<BudgetEvent, BudgetState> {
     on<_BudgetStreamUpdated>(_onUpdated);
     on<_BudgetStreamErrored>(_onStreamError);
     on<BudgetAdded>(_onAdded);
+    on<BudgetUpdated>(_onBudgetUpdated);
     on<BudgetDeleted>(_onDeleted);
     on<BudgetSpentUpdated>(_onSpentUpdated);
   }
@@ -56,8 +57,15 @@ class BudgetBloc extends Bloc<BudgetEvent, BudgetState> {
     }
   }
 
-  Future<void> _onDeleted(
-      BudgetDeleted event, Emitter<BudgetState> emit) async {
+  Future<void> _onBudgetUpdated(BudgetUpdated event, Emitter<BudgetState> emit) async {
+    try {
+      await _repo.updateBudget(event.budget);
+    } catch (e) {
+      emit(state.copyWith(errorMessage: e.toString()));
+    }
+  }
+
+  Future<void> _onDeleted(BudgetDeleted event, Emitter<BudgetState> emit) async {
     try {
       await _repo.deleteBudget(event.userId, event.budgetId);
     } catch (e) {

@@ -26,6 +26,13 @@ class BudgetAdded extends BudgetEvent {
   List<Object?> get props => [budget];
 }
 
+class BudgetUpdated extends BudgetEvent {
+  const BudgetUpdated({required this.budget});
+  final BudgetModel budget;
+  @override
+  List<Object?> get props => [budget];
+}
+
 class BudgetDeleted extends BudgetEvent {
   const BudgetDeleted({required this.userId, required this.budgetId});
   final String userId;

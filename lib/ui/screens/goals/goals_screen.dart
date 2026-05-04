@@ -156,143 +156,150 @@ class _GoalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SnapCard(
-      margin: const EdgeInsets.only(bottom: 12),
-      accentColor: _color,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 56,
-                height: 56,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    CircularProgressIndicator(
-                      value: goal.progressPercent,
-                      strokeWidth: 5,
-                      backgroundColor: AppColors.cardBorder,
-                      valueColor: AlwaysStoppedAnimation(_color),
-                    ),
-                    Center(
-                      child: Text(
-                        '${(goal.progressPercent * 100).round()}%',
-                        style: TextStyle(
-                          color: _color,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
+    return GestureDetector(
+      onTap: () => context.push('/add-goal', extra: goal),
+      child: SnapCard(
+        margin: const EdgeInsets.only(bottom: 12),
+        accentColor: _color,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 56,
+                  height: 56,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CircularProgressIndicator(
+                        value: goal.progressPercent,
+                        strokeWidth: 5,
+                        backgroundColor: AppColors.cardBorder,
+                        valueColor: AlwaysStoppedAnimation(_color),
+                      ),
+                      Center(
+                        child: Text(
+                          '${(goal.progressPercent * 100).round()}%',
+                          style: TextStyle(
+                            color: _color,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(goal.title,
+                      style: AppTypography.textTheme.titleLarge,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
+                ),
+                if (goal.isCompleted)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text('Completed',
+                        style: AppTypography.textTheme.labelSmall
+                            ?.copyWith(color: AppColors.primary)),
+                  )
+                else
+                  PopupMenuButton<String>(
+                    color: AppColors.surfaceElevated,
+                    icon: const Icon(Icons.more_vert_rounded, size: 18),
+                    onSelected: (v) {
+                      if (v == 'edit') {
+                        context.push('/add-goal', extra: goal);
+                      } else if (v == 'add-funds') {
+                        _showAddFundsSheet(context);
+                      } else if (v == 'delete') {
+                        context.read<GoalBloc>().add(GoalDeleted(
+                              userId: goal.userId,
+                              goalId: goal.id,
+                            ));
+                      }
+                    },
+                    itemBuilder: (_) => [
+                      const PopupMenuItem(
+                          value: 'edit', child: Text('Edit')),
+                      const PopupMenuItem(
+                          value: 'add-funds', child: Text('Add Funds')),
+                      const PopupMenuItem(
+                          value: 'delete', child: Text('Delete')),
+                    ],
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Saved',
+                        style: AppTypography.textTheme.labelMedium),
+                    Text(
+                      CurrencyFormatter.format(goal.currentAmount),
+                      style: AppTypography.textTheme.headlineSmall
+                          ?.copyWith(color: _color),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(goal.title,
-                    style: AppTypography.textTheme.titleLarge,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis),
-              ),
-              if (goal.isCompleted)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text('Completed',
-                      style: AppTypography.textTheme.labelSmall
-                          ?.copyWith(color: AppColors.primary)),
-                )
-              else
-                PopupMenuButton<String>(
-                  color: AppColors.surfaceElevated,
-                  icon: const Icon(Icons.more_vert_rounded, size: 18),
-                  onSelected: (v) {
-                    if (v == 'add-funds') {
-                      _showAddFundsSheet(context);
-                    } else if (v == 'delete') {
-                      context.read<GoalBloc>().add(GoalDeleted(
-                            userId: goal.userId,
-                            goalId: goal.id,
-                          ));
-                    }
-                  },
-                  itemBuilder: (_) => [
-                    const PopupMenuItem(
-                        value: 'add-funds', child: Text('Add Funds')),
-                    const PopupMenuItem(
-                        value: 'delete', child: Text('Delete')),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text('Target',
+                        style: AppTypography.textTheme.labelMedium),
+                    Text(
+                      CurrencyFormatter.format(goal.targetAmount),
+                      style: AppTypography.textTheme.headlineSmall,
+                    ),
                   ],
                 ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Saved',
-                      style: AppTypography.textTheme.labelMedium),
-                  Text(
-                    CurrencyFormatter.format(goal.currentAmount),
-                    style: AppTypography.textTheme.headlineSmall
-                        ?.copyWith(color: _color),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('Target',
-                      style: AppTypography.textTheme.labelMedium),
-                  Text(
-                    CurrencyFormatter.format(goal.targetAmount),
-                    style: AppTypography.textTheme.headlineSmall,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: goal.progressPercent,
-              minHeight: 4,
-              backgroundColor: AppColors.cardBorder,
-              valueColor: AlwaysStoppedAnimation(_color),
+              ],
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            goal.isCompleted
-                ? 'Done!'
-                : goal.isOverdue
-                    ? 'Overdue'
-                    : '${goal.daysLeft}d left',
-            style: AppTypography.textTheme.labelMedium?.copyWith(
-              color: goal.isOverdue
-                  ? AppColors.expense
-                  : AppColors.textSecondary,
-            ),
-          ),
-          if (!goal.isCompleted)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                'Deadline: ${DateFormat('d MMM yyyy').format(goal.deadline)}',
-                style: AppTypography.textTheme.bodySmall,
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: goal.progressPercent,
+                minHeight: 4,
+                backgroundColor: AppColors.cardBorder,
+                valueColor: AlwaysStoppedAnimation(_color),
               ),
             ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              goal.isCompleted
+                  ? 'Done!'
+                  : goal.isOverdue
+                      ? 'Overdue'
+                      : '${goal.daysLeft}d left',
+              style: AppTypography.textTheme.labelMedium?.copyWith(
+                color: goal.isOverdue
+                    ? AppColors.expense
+                    : AppColors.textSecondary,
+              ),
+            ),
+            if (!goal.isCompleted)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'Deadline: ${DateFormat('d MMM yyyy').format(goal.deadline)}',
+                  style: AppTypography.textTheme.bodySmall,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

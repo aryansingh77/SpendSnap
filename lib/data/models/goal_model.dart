@@ -54,8 +54,14 @@ class GoalModel extends Equatable {
     );
   }
 
-  GoalModel copyWith({double? currentAmount, String? title,
-      double? targetAmount, DateTime? deadline, String? note}) =>
+  GoalModel copyWith({
+    double? currentAmount,
+    String? title,
+    double? targetAmount,
+    DateTime? deadline,
+    String? colorHex,
+    String? note,
+  }) =>
       GoalModel(
         id: id,
         userId: userId,
@@ -63,7 +69,7 @@ class GoalModel extends Equatable {
         targetAmount: targetAmount ?? this.targetAmount,
         currentAmount: currentAmount ?? this.currentAmount,
         deadline: deadline ?? this.deadline,
-        colorHex: colorHex,
+        colorHex: colorHex ?? this.colorHex,
         note: note ?? this.note,
       );
 

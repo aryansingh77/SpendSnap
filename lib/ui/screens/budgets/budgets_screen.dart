@@ -205,86 +205,93 @@ class _BudgetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SnapCard(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              CategoryBadge(category: budget.category),
-              if (budget.isOverBudget)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.expenseMuted,
-                    borderRadius: BorderRadius.circular(20),
+    return GestureDetector(
+      onTap: () => context.push('/add-budget', extra: budget),
+      child: SnapCard(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                CategoryBadge(category: budget.category),
+                if (budget.isOverBudget)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.expenseMuted,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text('Over budget',
+                        style: AppTypography.textTheme.labelSmall
+                            ?.copyWith(color: AppColors.expense)),
+                  )
+                else if (budget.isNearLimit)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.warningMuted,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text('Near limit',
+                        style: AppTypography.textTheme.labelSmall
+                            ?.copyWith(color: AppColors.warning)),
                   ),
-                  child: Text('Over budget',
-                      style: AppTypography.textTheme.labelSmall
-                          ?.copyWith(color: AppColors.expense)),
-                )
-              else if (budget.isNearLimit)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.warningMuted,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text('Near limit',
-                      style: AppTypography.textTheme.labelSmall
-                          ?.copyWith(color: AppColors.warning)),
+                PopupMenuButton<String>(
+                  color: AppColors.surfaceElevated,
+                  icon: const Icon(Icons.more_vert_rounded, size: 18),
+                  onSelected: (v) {
+                    if (v == 'edit') {
+                      context.push('/add-budget', extra: budget);
+                    } else if (v == 'delete') {
+                      context.read<BudgetBloc>().add(BudgetDeleted(
+                            userId: budget.userId,
+                            budgetId: budget.id,
+                          ));
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    const PopupMenuItem(
+                        value: 'edit', child: Text('Edit')),
+                    const PopupMenuItem(
+                        value: 'delete', child: Text('Delete')),
+                  ],
                 ),
-              PopupMenuButton<String>(
-                color: AppColors.surfaceElevated,
-                icon: const Icon(Icons.more_vert_rounded, size: 18),
-                onSelected: (v) {
-                  if (v == 'delete') {
-                    context.read<BudgetBloc>().add(BudgetDeleted(
-                          userId: budget.userId,
-                          budgetId: budget.id,
-                        ));
-                  }
-                },
-                itemBuilder: (_) => [
-                  const PopupMenuItem(
-                      value: 'delete', child: Text('Delete')),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                CurrencyFormatter.format(budget.spentAmount),
-                style: AppTypography.textTheme.headlineSmall
-                    ?.copyWith(color: _barColor()),
-              ),
-              Text(
-                '/ ${CurrencyFormatter.format(budget.limitAmount)}',
-                style: AppTypography.textTheme.bodyMedium,
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          _AnimatedBar(progress: budget.usagePercent, color: _barColor()),
-          const SizedBox(height: 6),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              budget.isOverBudget
-                  ? '${CurrencyFormatter.format(budget.spentAmount - budget.limitAmount)} over'
-                  : '${CurrencyFormatter.format(budget.remainingAmount)} left',
-              style: AppTypography.textTheme.labelMedium?.copyWith(
-                color: _barColor(),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  CurrencyFormatter.format(budget.spentAmount),
+                  style: AppTypography.textTheme.headlineSmall
+                      ?.copyWith(color: _barColor()),
+                ),
+                Text(
+                  '/ ${CurrencyFormatter.format(budget.limitAmount)}',
+                  style: AppTypography.textTheme.bodyMedium,
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _AnimatedBar(progress: budget.usagePercent, color: _barColor()),
+            const SizedBox(height: 6),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                budget.isOverBudget
+                    ? '${CurrencyFormatter.format(budget.spentAmount - budget.limitAmount)} over'
+                    : '${CurrencyFormatter.format(budget.remainingAmount)} left',
+                style: AppTypography.textTheme.labelMedium?.copyWith(
+                  color: _barColor(),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

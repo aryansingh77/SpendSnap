@@ -55,6 +55,23 @@ class BudgetModel extends Equatable {
     spentAmount: spent,
   );
 
+  BudgetModel copyWith({
+    String? category,
+    double? limitAmount,
+    int? month,
+    int? year,
+    double? spentAmount,
+  }) =>
+      BudgetModel(
+        id: id,
+        userId: userId,
+        category: category ?? this.category,
+        limitAmount: limitAmount ?? this.limitAmount,
+        month: month ?? this.month,
+        year: year ?? this.year,
+        spentAmount: spentAmount ?? this.spentAmount,
+      );
+
   @override
   List<Object?> get props => [id, userId, category, limitAmount, month, year, spentAmount];
 }

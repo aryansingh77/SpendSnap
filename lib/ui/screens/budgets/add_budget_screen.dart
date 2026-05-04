@@ -15,7 +15,9 @@ import '../../../logic/services/budget_recommendation_service.dart';
 import '../../../logic/blocs/transaction/transaction_bloc.dart';
 
 class AddBudgetScreen extends StatefulWidget {
-  const AddBudgetScreen({super.key});
+  final BudgetModel? existingBudget;
+
+  const AddBudgetScreen({super.key, this.existingBudget});
 
   @override
   State<AddBudgetScreen> createState() => _AddBudgetScreenState();
@@ -27,9 +29,15 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
   String _category = 'Food & Dining';
   List<BudgetRecommendation> _recommendations = [];
 
+  bool get _isEditing => widget.existingBudget != null;
+
   @override
   void initState() {
     super.initState();
+    if (_isEditing) {
+      _amountCtrl.text = widget.existingBudget!.limitAmount.toString();
+      _category = widget.existingBudget!.category;
+    }
     _computeRecommendations();
   }
 
@@ -55,15 +63,24 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
     final uid =
         (context.read<AuthBloc>().state as AuthAuthenticated).profile.uid;
     final now = DateTime.now();
-    final budget = BudgetModel(
-      id: const Uuid().v4(),
-      userId: uid,
-      category: _category,
-      limitAmount: double.parse(_amountCtrl.text.trim()),
-      month: now.month,
-      year: now.year,
-    );
-    context.read<BudgetBloc>().add(BudgetAdded(budget: budget));
+
+    if (_isEditing) {
+      final updatedBudget = widget.existingBudget!.copyWith(
+        category: _category,
+        limitAmount: double.parse(_amountCtrl.text.trim()),
+      );
+      context.read<BudgetBloc>().add(BudgetUpdated(budget: updatedBudget));
+    } else {
+      final budget = BudgetModel(
+        id: const Uuid().v4(),
+        userId: uid,
+        category: _category,
+        limitAmount: double.parse(_amountCtrl.text.trim()),
+        month: now.month,
+        year: now.year,
+      );
+      context.read<BudgetBloc>().add(BudgetAdded(budget: budget));
+    }
     context.pop();
   }
 
@@ -77,7 +94,7 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
   Widget build(BuildContext context) {
     final rec = _currentRec;
     return Scaffold(
-      appBar: AppBar(title: const Text('New Budget')),
+      appBar: AppBar(title: Text(_isEditing ? 'Edit Budget' : 'New Budget')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -115,7 +132,7 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
               SizedBox(
                 width: double.infinity,
                 child: GlowButton(
-                  label: 'Create Budget',
+                  label: _isEditing ? 'Save Changes' : 'Create Budget',
                   onPressed: _submit,
                   icon: Icons.check_rounded,
                 ),
