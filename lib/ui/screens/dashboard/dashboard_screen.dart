@@ -800,16 +800,18 @@ class _TransactionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final catColor = AppColors.forCategory(transaction.category);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.cardBorder),
-      ),
-      child: Row(
-        children: [
+      return GestureDetector(
+        onTap: () => context.push('/add-transaction', extra: transaction),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.cardBorder),
+          ),
+          child: Row(
+            children: [
           Container(
             width: 46,
             height: 46,
@@ -881,6 +883,7 @@ class _TransactionTile extends StatelessWidget {
             ],
           ),
         ],
+      ),
       ),
     );
   }

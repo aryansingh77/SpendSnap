@@ -12,6 +12,7 @@ import 'logic/blocs/auth/auth_bloc.dart';
 import 'logic/blocs/budget/budget_bloc.dart';
 import 'logic/blocs/goal/goal_bloc.dart';
 import 'logic/blocs/transaction/transaction_bloc.dart';
+import 'data/models/transaction_model.dart';
 import 'ui/screens/auth/login_screen.dart';
 import 'ui/screens/auth/signup_screen.dart';
 import 'ui/screens/budgets/add_budget_screen.dart';
@@ -147,7 +148,9 @@ class _SpendSnapAppState extends State<SpendSnapApp> {
         ),
         GoRoute(
           path: '/add-transaction',
-          builder: (_, __) => const AddTransactionScreen(),
+          builder: (_, state) => AddTransactionScreen(
+            existingTransaction: state.extra as TransactionModel?,
+          ),
         ),
         GoRoute(
           path: '/add-budget',

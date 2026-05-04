@@ -293,87 +293,90 @@ class _TxnTile extends StatelessWidget {
               transactionId: txn.id,
             ));
       },
-      child: SnapCard(
-        margin: const EdgeInsets.only(bottom: 8),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.forCategory(txn.category)
-                    .withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Icon(
-                  AppIcons.forCategory(txn.category),
-                  color: AppColors.forCategory(txn.category),
-                  size: 18,
+      child: GestureDetector(
+        onTap: () => context.push('/add-transaction', extra: txn),
+        child: SnapCard(
+          margin: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.forCategory(txn.category)
+                      .withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Icon(
+                    AppIcons.forCategory(txn.category),
+                    color: AppColors.forCategory(txn.category),
+                    size: 18,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(txn.title,
-                      style: AppTypography.textTheme.titleMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      CategoryBadge(category: txn.category, compact: true),
-                      if (txn.isRecurring) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.secondary.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(txn.title,
+                        style: AppTypography.textTheme.titleMedium,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        CategoryBadge(category: txn.category, compact: true),
+                        if (txn.isRecurring) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.secondary.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.repeat_rounded,
+                                    size: 10, color: AppColors.secondary),
+                                const SizedBox(width: 3),
+                                Text(txn.recurringInterval ?? '',
+                                    style: AppTypography.textTheme.labelSmall
+                                        ?.copyWith(color: AppColors.secondary)),
+                              ],
+                            ),
                           ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.repeat_rounded,
-                                  size: 10, color: AppColors.secondary),
-                              const SizedBox(width: 3),
-                              Text(txn.recurringInterval ?? '',
-                                  style: AppTypography.textTheme.labelSmall
-                                      ?.copyWith(color: AppColors.secondary)),
-                            ],
-                          ),
-                        ),
+                        ],
                       ],
-                    ],
-                  ),
-                  if (txn.note.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      txn.note,
-                      style: AppTypography.textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                        fontStyle: FontStyle.italic,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
+                    if (txn.note.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        txn.note,
+                        style: AppTypography.textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  AmountDisplay(amount: txn.amount, isExpense: txn.isExpense),
+                  const SizedBox(height: 2),
+                  Text(DateFormat('h:mm a').format(txn.date),
+                      style: AppTypography.textTheme.bodySmall),
                 ],
               ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                AmountDisplay(amount: txn.amount, isExpense: txn.isExpense),
-                const SizedBox(height: 2),
-                Text(DateFormat('h:mm a').format(txn.date),
-                    style: AppTypography.textTheme.bodySmall),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

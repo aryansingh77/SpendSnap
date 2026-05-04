@@ -15,7 +15,8 @@ import '../../../logic/blocs/auth/auth_bloc.dart';
 import '../../../logic/blocs/transaction/transaction_bloc.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+  const AddTransactionScreen({super.key, this.existingTransaction});
+  final TransactionModel? existingTransaction;
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -23,12 +24,12 @@ class AddTransactionScreen extends StatefulWidget {
 
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _titleCtrl = TextEditingController();
-  final _amountCtrl = TextEditingController();
-  final _noteCtrl = TextEditingController();
+  late final TextEditingController _titleCtrl;
+  late final TextEditingController _amountCtrl;
+  late final TextEditingController _noteCtrl;
 
-  TransactionType _type = TransactionType.expense;
-  String _category = 'Food & Dining';
+  late TransactionType _type;
+  late String _category;
 
   static const _titleHints = {
     'Food & Dining':    'e.g., Lunch at Swiggy',
@@ -42,8 +43,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     'Savings':          'e.g., FD deposit',
   };
   DateTime _date = DateTime.now();
-  bool _isRecurring = false;
-  String _recurringInterval = 'Monthly';
+  late bool _isRecurring;
+  late String _recurringInterval;
+
+  @override
+  void initState() {
+    super.initState();
+    final ext = widget.existingTransaction;
+    _titleCtrl = TextEditingController(text: ext?.title ?? '');
+    _amountCtrl = TextEditingController(text: ext?.amount.toString() ?? '');
+    _noteCtrl = TextEditingController(text: ext?.note ?? '');
+    _type = ext?.type ?? TransactionType.expense;
+    _category = ext?.category ?? (_type == TransactionType.income ? 'Income' : 'Food & Dining');
+    _date = ext?.date ?? DateTime.now();
+    _isRecurring = ext?.isRecurring ?? false;
+    _recurringInterval = ext?.recurringInterval ?? 'Monthly';
+  }
 
   @override
   void dispose() {
@@ -57,7 +72,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     if (!_formKey.currentState!.validate()) return;
     final uid = (context.read<AuthBloc>().state as AuthAuthenticated).profile.uid;
     final txn = TransactionModel(
-      id: const Uuid().v4(),
+      id: widget.existingTransaction?.id ?? const Uuid().v4(),
       userId: uid,
       title: _titleCtrl.text.trim(),
       amount: double.parse(_amountCtrl.text.trim()),
@@ -68,7 +83,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       isRecurring: _isRecurring,
       recurringInterval: _isRecurring ? _recurringInterval : null,
     );
-    context.read<TransactionBloc>().add(TransactionAdded(transaction: txn));
+    if (widget.existingTransaction != null) {
+      context.read<TransactionBloc>().add(TransactionUpdated(transaction: txn));
+    } else {
+      context.read<TransactionBloc>().add(TransactionAdded(transaction: txn));
+    }
     context.pop();
   }
 
@@ -94,7 +113,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Transaction')),
+      appBar: AppBar(title: Text(widget.existingTransaction != null ? 'Edit Transaction' : 'Add Transaction')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -205,7 +224,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               SizedBox(
                 width: double.infinity,
                 child: GlowButton(
-                  label: 'Save Transaction',
+                  label: widget.existingTransaction != null ? 'Update Transaction' : 'Save Transaction',
                   onPressed: _submit,
                   icon: Icons.check_rounded,
                   color: _type == TransactionType.income
