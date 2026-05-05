@@ -1,6 +1,6 @@
 <h1 align="center">
   <br/>
-  💸 SpendSnap
+   SpendSnap
 </h1>
 
 <h4 align="center">An intelligent, beautifully designed personal finance manager powered by Flutter, Firebase, and Google Gemini AI.</h4>
@@ -15,28 +15,28 @@
 
 ---
 
-## ✨ Features
+##  Features
 
-### 🤖 AI & Automation
+###  AI & Automation
 * **Smart NLP Entry**: Type *"Spent ₹500 on dinner"* and Gemini instantly categorizes and logs structured data.
 * **Receipt Vision Scanner**: Snap a photo or upload an image. The AI extracts the amount, vendor, and dynamically applies categories.
 * **Bank Sync Simulation**: Auto-categories mocked HTTP network fetches to simulate sandbox open-banking feeds.
 
-### 💎 Core Financials
+###  Core Financials
 * **Transactions**: Add, edit, swipe-to-delete, recurring billing, transaction notes, and filter incomes and expenses.
 * **Budgets**: Prevent overspending with real-time, progress-animated category limits.
 * **Goals**: Establish specific time-bound saving targets. Add incremental funds.
 * **Insights**: Beautiful interactive Pie charts and 6-month Line trend graphs.
 * **Custom UI**: Fluid animations using `flutter_animate`, floating pill-shaped dock, completely custom-built theme, and custom launcher logo.
 
-### 🧠 Intelligence Engines
+###  Intelligence Engines
 * **Spending Health Score (0-100)**: Assesses 4 dimensions—Budget Adherence, Savings Rate, Spending Trend, and Category Diversity—to grade your fiscal responsibility. 
 * **Smart Budget Recommendations**: Implements the traditional **50/30/20 rule** dynamically blended against your actual 3-month personal baseline for hyper-realistic budget targets.
 * **Stateful Notifications**: Alert center tracking unread alerts for budget overflows and goal completions.
 
 ---
 
-## 🏗️ Architecture & Technical Design
+##  Architecture & Technical Design
 
 SpendSnap is built using **Feature-First Clean Architecture**. It strictly enforces the **BLoC** (Business Logic Component) pattern for state management, rigidly separating the UI layer from the Firebase/API data layers.
 
@@ -89,7 +89,7 @@ Root > Collection('users')
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 * Flutter SDK (3.x+)
@@ -125,7 +125,7 @@ flutter run
 
 ---
 
-## 🧪 Testing
+##  Testing
 
 SpendSnap ships with rigorous coverage for all algorithm-heavy functionality to prevent mathematical regressions.
 
