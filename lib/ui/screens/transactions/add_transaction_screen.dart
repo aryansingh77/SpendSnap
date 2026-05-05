@@ -13,6 +13,8 @@ import '../../../core/widgets/snap_text_field.dart';
 import '../../../data/models/transaction_model.dart';
 import '../../../logic/blocs/auth/auth_bloc.dart';
 import '../../../logic/blocs/transaction/transaction_bloc.dart';
+import '../../../logic/services/ai_transaction_service.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   const AddTransactionScreen({super.key, this.existingTransaction});
@@ -27,6 +29,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   late final TextEditingController _titleCtrl;
   late final TextEditingController _amountCtrl;
   late final TextEditingController _noteCtrl;
+  final TextEditingController _smartEntryCtrl = TextEditingController();
 
   late TransactionType _type;
   late String _category;
@@ -65,7 +68,59 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     _titleCtrl.dispose();
     _amountCtrl.dispose();
     _noteCtrl.dispose();
+    _smartEntryCtrl.dispose();
     super.dispose();
+  }
+
+  bool _isProcessingAi = false;
+  final AiTransactionService _aiService = AiTransactionService();
+
+  Future<void> _processSmartText() async {
+    if (_smartEntryCtrl.text.trim().isEmpty) return;
+    FocusScope.of(context).unfocus();
+    setState(() => _isProcessingAi = true);
+    try {
+      final uid = (context.read<AuthBloc>().state as AuthAuthenticated).profile.uid;
+      final txn = await _aiService.extractFromText(_smartEntryCtrl.text.trim(), uid);
+      _populateFromAi(txn);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('AI Error: $e')));
+    } finally {
+      if (mounted) setState(() => _isProcessingAi = false);
+    }
+  }
+
+  Future<void> _processReceipt() async {
+    final image = await ImagePicker().pickImage(source: ImageSource.camera);
+    if (image == null) return;
+
+    setState(() => _isProcessingAi = true);
+    try {
+      final uid = (context.read<AuthBloc>().state as AuthAuthenticated).profile.uid;
+      final bytes = await image.readAsBytes();
+      final txn = await _aiService.extractFromReceipt(bytes, uid);
+      _populateFromAi(txn);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('AI Vision Error: $e')));
+    } finally {
+      if (mounted) setState(() => _isProcessingAi = false);
+    }
+  }
+
+  void _populateFromAi(TransactionModel txn) {
+    setState(() {
+      _titleCtrl.text = txn.title;
+      _amountCtrl.text = txn.amount.toString();
+      _type = txn.type;
+      _category = txn.category;
+      _date = txn.date;
+      _smartEntryCtrl.clear();
+    });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Populated successfully from AI!', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green));
+    }
   }
 
   void _submit() {
@@ -114,13 +169,64 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.existingTransaction != null ? 'Edit Transaction' : 'Add Transaction')),
-      body: SingleChildScrollView(
+      body: _isProcessingAi
+        ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+        : SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // AI Smart Entry Section
+              if (widget.existingTransaction == null) ...[
+                Text('AI Assistant', style: AppTypography.textTheme.titleMedium?.copyWith(color: AppColors.primary)),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: SnapTextField(
+                        controller: _smartEntryCtrl,
+                        hint: 'e.g, Spent 500 on dinner',
+                        prefixIcon: Icons.auto_awesome_rounded,
+                        maxLines: 1,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      height: 52, // Match text field height
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceElevated,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.send_rounded, color: AppColors.primary),
+                        onPressed: _processSmartText,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _processReceipt,
+                    icon: const Icon(Icons.receipt_long_rounded),
+                    label: const Text('Scan Receipt (Camera)'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Divider(color: AppColors.cardBorder),
+                const SizedBox(height: 16),
+              ],
+
               // Type toggle
               _TypeToggle(
                 selected: _type,
