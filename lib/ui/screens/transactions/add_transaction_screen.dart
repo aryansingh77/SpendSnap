@@ -91,8 +91,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     }
   }
 
-  Future<void> _processReceipt() async {
-    final image = await ImagePicker().pickImage(source: ImageSource.camera);
+  Future<void> _processReceipt(ImageSource source) async {
+    final image = await ImagePicker().pickImage(source: source);
     if (image == null) return;
 
     setState(() => _isProcessingAi = true);
@@ -187,6 +187,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   children: [
                     Expanded(
                       child: SnapTextField(
+                        label: 'Smart AI Entry',
                         controller: _smartEntryCtrl,
                         hint: 'e.g, Spent 500 on dinner',
                         prefixIcon: Icons.auto_awesome_rounded,
@@ -208,19 +209,36 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: _processReceipt,
-                    icon: const Icon(Icons.receipt_long_rounded),
-                    label: const Text('Scan Receipt (Camera)'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(color: AppColors.primary),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _processReceipt(ImageSource.camera),
+                        icon: const Icon(Icons.camera_alt_rounded),
+                        label: const Text('Camera'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _processReceipt(ImageSource.gallery),
+                        icon: const Icon(Icons.photo_library_rounded),
+                        label: const Text('Gallery'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 const Divider(color: AppColors.cardBorder),

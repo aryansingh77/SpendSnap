@@ -2,17 +2,18 @@ import 'dart:convert';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../../data/models/transaction_model.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:typed_data';
 
 class AiTransactionService {
   // TODO: Replace with a real API key from Google AI Studio (https://aistudio.google.com/)
-  static const String _apiKey = 'REPLACE_ME';
+  static const String _apiKey = 'AIzaSyDL-ubzPq9L9vDLZRrWWMR-eU9aGQEJ_S0';
 
   final GenerativeModel _textModel;
   final GenerativeModel _visionModel;
 
   AiTransactionService()
-      : _textModel = GenerativeModel(model: 'gemini-1.5-flash', apiKey: _apiKey),
-        _visionModel = GenerativeModel(model: 'gemini-1.5-flash', apiKey: _apiKey);
+      : _textModel = GenerativeModel(model: 'gemini-2.5-flash', apiKey: _apiKey),
+        _visionModel = GenerativeModel(model: 'gemini-2.5-flash', apiKey: _apiKey);
 
   Future<TransactionModel> extractFromText(String text, String userId) async {
     final prompt = '''
@@ -53,7 +54,7 @@ class AiTransactionService {
     }
   }
 
-  Future<TransactionModel> extractFromReceipt(List<int> imageBytes, String userId) async {
+  Future<TransactionModel> extractFromReceipt(Uint8List imageBytes, String userId) async {
     final prompt = '''
       Extract the transaction details from this receipt image.
       

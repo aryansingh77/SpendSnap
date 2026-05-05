@@ -1,0 +1,1 @@
+import 'package:http/http.dart' as http; void main() async { final url = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models?key=AIzaSyDL-ubzPq9L9vDLZRrWWMR-eU9aGQEJ_S0'); final response = await http.get(url); print(response.body); }
