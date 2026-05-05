@@ -18,7 +18,11 @@ A Flutter application for smart personal finance tracking with rule-based spendi
 ### Extended (beyond base requirements)
 | Feature | Description |
 |---|---|
+| AI Smart Entry | Convert natural language text directly into structured transaction data using Gemini |
+| AI Receipt Scanning | Snap a photo of a physical receipt or upload an image to automatically extract amount, store, and category |
 | Smart Notification Center | Alert system with dynamic unread badging (stateful tracking) for budget limits & goal achievements |
+| Elegant UI & Custom Dock | Custom pill-shaped floating navigation bar, refined app bars, and responsive layout constraints |
+| Custom Launcher Logo | Fully integrated branded app icon visible on home screens and task switchers |
 | Transaction Notes | Log and elegantly display custom notes on each transaction |
 | Recurring Transactions | Mark transactions as Daily / Weekly / Monthly |
 | Spending Health Score | Rule-based 0–100 score across 4 dimensions |
@@ -104,6 +108,12 @@ Simulates a real banking API integration using a public HTTP mock API (`dummyjso
 2. Uses dictionary-based matching to infer the correct category based on raw title strings.
 3. Handles HTTP network errors, parses JSON, and models the user's data structures appropriately.
 
+### 4. Smart AI Transaction Engine (`logic/services/ai_transaction_service.dart`)
+
+Integrates with the `google_generative_ai` package using Google's **Gemini-Flash** latest multimodal models to provide two powerful entry points:
+- **Natural Language Parsing**: Accepts strings like "Spent 50 bucks on Uber today" and outputs a strictly typed JSON mapped immediately to a `TransactionModel`.
+- **Receipt Vision API**: Passes raw `Uint8List` image bytes (via Camera or Gallery) to the model with specific prompt heuristics to isolate total amounts, vendor titles, and auto-classify predefined categories.
+
 ---
 
 ## Setup Instructions
@@ -169,11 +179,13 @@ flutter test
 
 ---
 
-## AI Usage Disclosure
+## AI Usage
 
 | Tool | Purpose | Manual Modifications |
 |---|---|---|
-| Claude (Anthropic) | Flutter widget boilerplate, Bloc scaffolding | Scoring algorithm dimensions & weights, recommendation blending ratios, all UI design decisions, Firestore schema, architecture design |
+| Gemini Flash | NLP processing, unstructured transaction mapping | `ai_transaction_service.dart` handles dynamic prompt creation, JSON string decoding, and fallback fallback error-states |
+| Gemini Flash | Receipt Image OCR | Byte array parsing, schema alignment, and image picking |
+| Claude / GPT | Flutter widget boilerplate, Bloc scaffolding | Scoring algorithm dimensions & weights, recommendation blending ratios, all UI design decisions, Firestore schema, architecture design |
 
 The `SpendingHealthScoreService` scoring dimensions and `BudgetRecommendationService` blending ratios were designed from personal finance principles (50/30/20 rule, savings rate benchmarks) — not copied from tutorials.
 
