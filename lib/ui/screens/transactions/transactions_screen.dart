@@ -157,12 +157,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/add-transaction'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.background,
-        child: const Icon(Icons.add_rounded),
-      ),
     );
   }
 

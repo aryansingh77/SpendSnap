@@ -76,8 +76,8 @@ class _DashboardHeader extends StatelessWidget {
         GestureDetector(
           onTap: () => context.push('/profile'),
           child: Container(
-            width: 44,
-            height: 44,
+            width: 40,
+            height: 40,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
@@ -91,7 +91,7 @@ class _DashboardHeader extends StatelessWidget {
                 profileName[0].toUpperCase(),
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 17,
+                  fontSize: 15,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -113,10 +113,11 @@ class _DashboardHeader extends StatelessWidget {
                         : 'Good evening';
                 return '$salutation, ${profileName.split(' ').first}';
               }(),
-              style: AppTypography.textTheme.titleLarge?.copyWith(
+              style: AppTypography.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
+              overflow: TextOverflow.ellipsis,
             ),
             Text(
               DateFormat('MMMM yyyy').format(DateTime.now()),

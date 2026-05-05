@@ -74,12 +74,6 @@ class GoalsScreen extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/add-goal'),
-        backgroundColor: AppColors.secondary,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add_rounded),
-      ),
     );
   }
 }

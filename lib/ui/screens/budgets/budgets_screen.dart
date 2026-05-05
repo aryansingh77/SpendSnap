@@ -72,12 +72,6 @@ class BudgetsScreen extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/add-budget'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.background,
-        child: const Icon(Icons.add_rounded),
-      ),
     );
   }
 }

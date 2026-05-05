@@ -22,6 +22,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _repo;
 
   Future<void> _onStarted(AuthStarted event, Emitter<AuthState> emit) async {
+    // Give minimum 2 seconds for splash screen animations to finish correctly before redirection
+    await Future.delayed(const Duration(seconds: 2));
+
     final user = _repo.currentUser;
     if (user == null) {
       emit(const AuthUnauthenticated());

@@ -11,72 +11,114 @@ class MainShell extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       body: navigationShell,
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: AppColors.cardBorder),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.4),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-                spreadRadius: -4,
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
-            child: NavigationBar(
-              selectedIndex: navigationShell.currentIndex,
-              onDestinationSelected: (i) => navigationShell.goBranch(
-                i,
-                initialLocation: i == navigationShell.currentIndex,
-              ),
-              backgroundColor: Colors.transparent,
-              surfaceTintColor: Colors.transparent,
-              indicatorColor: AppColors.primary.withValues(alpha: 0.15),
-              labelBehavior:
-                  NavigationDestinationLabelBehavior.onlyShowSelected,
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.home_outlined, color: AppColors.textMuted),
-                  selectedIcon:
-                      Icon(Icons.home_rounded, color: AppColors.primary),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+          child: Container(
+            height: 60,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: AppColors.cardBorder, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _NavBarItem(
+                  icon: Icons.home_rounded,
                   label: 'Home',
+                  isSelected: navigationShell.currentIndex == 0,
+                  onTap: () => _onTap(0),
                 ),
-                NavigationDestination(
-                  icon: Icon(Icons.receipt_long_outlined,
-                      color: AppColors.textMuted),
-                  selectedIcon: Icon(Icons.receipt_long_rounded,
-                      color: AppColors.primary),
-                  label: 'Transactions',
+                _NavBarItem(
+                  icon: Icons.receipt_long_rounded,
+                  label: 'History',
+                  isSelected: navigationShell.currentIndex == 1,
+                  onTap: () => _onTap(1),
                 ),
-                NavigationDestination(
-                  icon: Icon(Icons.account_balance_wallet_outlined,
-                      color: AppColors.textMuted),
-                  selectedIcon: Icon(Icons.account_balance_wallet_rounded,
-                      color: AppColors.primary),
+                _NavBarItem(
+                  icon: Icons.account_balance_wallet_rounded,
                   label: 'Budgets',
+                  isSelected: navigationShell.currentIndex == 2,
+                  onTap: () => _onTap(2),
                 ),
-                NavigationDestination(
-                  icon: Icon(Icons.flag_outlined, color: AppColors.textMuted),
-                  selectedIcon:
-                      Icon(Icons.flag_rounded, color: AppColors.primary),
+                _NavBarItem(
+                  icon: Icons.flag_rounded,
                   label: 'Goals',
+                  isSelected: navigationShell.currentIndex == 3,
+                  onTap: () => _onTap(3),
                 ),
-                NavigationDestination(
-                  icon: Icon(Icons.insights_outlined,
-                      color: AppColors.textMuted),
-                  selectedIcon:
-                      Icon(Icons.insights_rounded, color: AppColors.primary),
+                _NavBarItem(
+                  icon: Icons.insights_rounded,
                   label: 'Insights',
+                  isSelected: navigationShell.currentIndex == 4,
+                  onTap: () => _onTap(4),
                 ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  void _onTap(int index) {
+    navigationShell.goBranch(
+      index,
+      initialLocation: index == navigationShell.currentIndex,
+    );
+  }
+}
+
+class _NavBarItem extends StatelessWidget {
+  const _NavBarItem({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isSelected ? AppColors.primary : AppColors.textMuted;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.15) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 22),
+            if (isSelected) ...[
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

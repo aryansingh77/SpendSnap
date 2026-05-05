@@ -88,6 +88,22 @@ class AppTheme {
       thickness: 1,
       space: 1,
     ),
+    navigationBarTheme: NavigationBarThemeData(
+      height: 64,
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return AppTypography.textTheme.labelSmall?.copyWith(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w700,
+            fontSize: 10,
+          );
+        }
+        return AppTypography.textTheme.labelSmall?.copyWith(
+          color: AppColors.textMuted,
+          fontSize: 10,
+        );
+      }),
+    ),
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: AppColors.surface,
       selectedItemColor: AppColors.primary,
